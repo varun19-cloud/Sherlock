@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — MindMaze</title>
+  <meta name="description" content="Sign in or create your MindMaze detective account to start investigating mysteries." />
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/auth.css" />
+</head>
+<body class="auth-body">
+
+<div class="auth-layout">
+  <!-- Left panel — brand / atmosphere -->
+  <div class="auth-panel-left">
+    <div class="auth-panel-inner">
+      <a href="/" class="auth-logo">
+        <span>🔍</span> MindMaze
+      </a>
+      <div class="auth-quote">
+        <blockquote>
+          "When you have eliminated the impossible, whatever remains, however improbable, must be the truth."
+        </blockquote>
+        <cite>— Sherlock Holmes</cite>
+      </div>
+      <div class="auth-tagline">
+        <p>Your case file awaits.</p>
+        <p class="text-muted text-sm">Investigate. Deduce. Solve.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right panel — forms -->
+  <div class="auth-panel-right">
+    <div class="auth-form-container">
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" data-tab="login">Sign In</button>
+        <button class="auth-tab" id="tab-register" data-tab="register">Create Account</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" class="auth-form">
+        <h2>Welcome Back, Detective</h2>
+        <p class="text-secondary text-sm" style="margin-bottom:var(--space-6)">Sign in to continue your investigations.</p>
+
+        <div id="login-error" class="alert alert-error hidden" style="margin-bottom:var(--space-4)"></div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email</label>
+          <input type="email" id="login-email" class="form-input" placeholder="detective@example.com" autocomplete="email" required />
+        </div>
+
+        <div class="form-group mt-4">
+          <label class="form-label" for="login-password">Password</label>
+          <div class="input-with-toggle">
+            <input type="password" id="login-password" class="form-input" placeholder="••••••••" autocomplete="current-password" required />
+            <button type="button" class="password-toggle" data-target="login-password" aria-label="Toggle password visibility">
+              <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" id="login-submit" class="btn btn-primary w-full mt-6">
+          Sign In
+        </button>
+
+        <p class="text-center text-secondary text-sm mt-4">
+          No account? <button type="button" class="link-btn" data-switch="register">Create one</button>
+        </p>
+      </form>
+
+      <!-- Register Form (hidden) -->
+      <form id="register-form" class="auth-form hidden">
+        <h2>Open a Case File</h2>
+        <p class="text-secondary text-sm" style="margin-bottom:var(--space-6)">Create your detective account to begin.</p>
+
+        <div id="register-error" class="alert alert-error hidden" style="margin-bottom:var(--space-4)"></div>
+
+        <div class="form-group">
+          <label class="form-label" for="reg-username">Detective Name</label>
+          <input type="text" id="reg-username" class="form-input" placeholder="SherlockJr" autocomplete="username" required minlength="3" maxlength="20" />
+          <span class="form-hint">3–20 characters, letters/numbers/underscores only</span>
+        </div>
+
+        <div class="form-group mt-4">
+          <label class="form-label" for="reg-email">Email</label>
+          <input type="email" id="reg-email" class="form-input" placeholder="detective@example.com" autocomplete="email" required />
+        </div>
+
+        <div class="form-group mt-4">
+          <label class="form-label" for="reg-password">Password</label>
+          <div class="input-with-toggle">
+            <input type="password" id="reg-password" class="form-input" placeholder="Min 6 characters" autocomplete="new-password" required minlength="6" />
+            <button type="button" class="password-toggle" data-target="reg-password" aria-label="Toggle password">
+              <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group mt-4">
+          <label class="form-label" for="reg-password-confirm">Confirm Password</label>
+          <input type="password" id="reg-password-confirm" class="form-input" placeholder="Repeat password" autocomplete="new-password" required />
+        </div>
+
+        <button type="submit" id="register-submit" class="btn btn-primary w-full mt-6">
+          Create Account
+        </button>
+
+        <p class="text-center text-secondary text-sm mt-4">
+          Already have an account? <button type="button" class="link-btn" data-switch="login">Sign in</button>
+        </p>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/ui.js"></script>
+<script>
+  // Redirect if already logged in
+  if (auth.isLoggedIn()) window.location.href = '/pages/cases.html';
+
+  // Tab switching
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+    document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
+  }
+
+  document.querySelectorAll('.auth-tab').forEach(t => {
+    t.addEventListener('click', () => switchTab(t.dataset.tab));
+  });
+
+  document.querySelectorAll('[data-switch]').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.switch));
+  });
+
+  // Password toggle
+  document.querySelectorAll('.password-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      input.type = input.type === 'password' ? 'text' : 'password';
+    });
+  });
+
+  // Show/hide error
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+  function hideError(id) { document.getElementById(id).classList.add('hidden'); }
+
+  // Login
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideError('login-error');
+    const btn = document.getElementById('login-submit');
+    setLoading(btn, true);
+    try {
+      const data = await api.login({
+        email: document.getElementById('login-email').value.trim(),
+        password: document.getElementById('login-password').value,
+      });
+      api.setToken(data.token);
+      auth.setUser(data.user);
+      toast.success(`Welcome back, ${data.user.username}!`);
+      setTimeout(() => { window.location.href = '/pages/cases.html'; }, 800);
+    } catch (err) {
+      showError('login-error', err.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(btn, false);
+    }
+  });
+
+  // Register
+  document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideError('register-error');
+
+    const password = document.getElementById('reg-password').value;
+    const confirm = document.getElementById('reg-password-confirm').value;
+
+    if (password !== confirm) {
+      showError('register-error', 'Passwords do not match.');
+      return;
+    }
+
+    const btn = document.getElementById('register-submit');
+    setLoading(btn, true);
+    try {
+      const data = await api.register({
+        username: document.getElementById('reg-username').value.trim(),
+        email: document.getElementById('reg-email').value.trim(),
+        password,
+      });
+      api.setToken(data.token);
+      auth.setUser(data.user);
+      toast.success(`Welcome to MindMaze, ${data.user.username}!`);
+      setTimeout(() => { window.location.href = '/pages/cases.html'; }, 800);
+    } catch (err) {
+      const msg = err.data?.errors?.[0]?.message || err.message || 'Registration failed.';
+      showError('register-error', msg);
+    } finally {
+      setLoading(btn, false);
+    }
+  });
+</script>
+</body>
+</html>

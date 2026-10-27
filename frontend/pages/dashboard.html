@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — MindMaze</title>
+  <meta name="description" content="Your MindMaze detective dashboard — track investigations, XP, and achievements."/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <link rel="stylesheet" href="/css/dashboard.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="navbar-brand"><span>🔍</span> MindMaze</a>
+  <button class="nav-toggle" id="nav-toggle">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <ul class="navbar-nav" id="navbar-nav">
+    <li><a href="/pages/cases.html">Case Library</a></li>
+    <li><a href="/pages/dashboard.html" class="active">Dashboard</a></li>
+    <li><a href="/pages/leaderboard.html">Leaderboard</a></li>
+  </ul>
+  <div class="navbar-actions">
+    <span class="text-secondary text-sm nav-username"></span>
+    <button class="btn btn-outline btn-sm" id="logout-btn">Logout</button>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <h1>Detective Dashboard</h1>
+        <p class="text-secondary">Your investigation record and progress.</p>
+      </div>
+      <a href="/pages/cases.html" class="btn btn-primary">Open New Case</a>
+    </div>
+
+    <!-- Profile Card -->
+    <div class="dashboard-hero card mb-8" id="profile-card">
+      <div class="profile-avatar" id="profile-avatar">🕵️</div>
+      <div class="profile-info">
+        <div class="profile-name" id="profile-name">Loading…</div>
+        <div class="profile-rank" id="profile-rank">—</div>
+        <div class="profile-xp-bar" style="margin-top:var(--space-3)">
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-muted" id="xp-label">0 XP</span>
+            <span class="text-muted" id="xp-next-label">—</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="xp-progress" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="profile-stats" id="profile-stats">
+        <div class="stat-block">
+          <div class="stat-value" id="stat-cases">—</div>
+          <div class="stat-label">Cases Solved</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-value" id="stat-score">—</div>
+          <div class="stat-label">Total Score</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-value" id="stat-active">—</div>
+          <div class="stat-label">Active Cases</div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-value" id="stat-avg">—</div>
+          <div class="stat-label">Avg Score</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs mb-6">
+      <button class="tab-btn active" data-tab="active">Active Investigations</button>
+      <button class="tab-btn" data-tab="completed">Completed Cases</button>
+      <button class="tab-btn" data-tab="achievements">Achievements</button>
+    </div>
+
+    <!-- Active Investigations -->
+    <div id="tab-active">
+      <div id="active-list" class="inv-grid">
+        <div class="loading-state"><div class="spinner spinner-lg"></div></div>
+      </div>
+    </div>
+
+    <!-- Completed -->
+    <div id="tab-completed" class="hidden">
+      <div id="completed-list" class="inv-grid">
+        <div class="loading-state"><div class="spinner spinner-lg"></div></div>
+      </div>
+    </div>
+
+    <!-- Achievements -->
+    <div id="tab-achievements" class="hidden">
+      <div id="achievements-grid" class="achievements-grid">
+        <div class="loading-state"><div class="spinner spinner-lg"></div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast-container"></div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/ui.js"></script>
+<script>
+  if (!auth.requireAuth()) { /* redirected */ }
+
+  document.getElementById('nav-toggle').addEventListener('click', () => {
+    document.getElementById('navbar-nav').classList.toggle('open');
+  });
+  document.getElementById('logout-btn').addEventListener('click', () => auth.logout());
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`tab-${btn.dataset.tab}`).classList.remove('hidden');
+    });
+  });
+
+  async function loadDashboard() {
+    try {
+      const data = await api.getDashboard();
+      const user = data.user;
+      const stats = data.stats;
+
+      // Update nav
+      document.querySelectorAll('.nav-username').forEach(el => el.textContent = user.username);
+
+      // Profile
+      document.getElementById('profile-name').textContent = user.username;
+      document.getElementById('profile-rank').textContent = user.rank;
+
+      const xpInfo = xpToNextRank(user.xp);
+      document.getElementById('xp-label').textContent = `${user.xp} XP`;
+      document.getElementById('xp-next-label').textContent = xpInfo.next ? `${xpInfo.remaining} XP to ${xpInfo.next}` : 'Max rank achieved';
+      document.getElementById('xp-progress').style.width = xpInfo.progress + '%';
+
+      document.getElementById('stat-cases').textContent = stats.casesCompleted;
+      document.getElementById('stat-score').textContent = stats.totalXP;
+      document.getElementById('stat-active').textContent = stats.casesActive;
+      document.getElementById('stat-avg').textContent = stats.avgScore || '—';
+
+      // Active investigations
+      renderActiveList(data.activeInvestigations);
+      renderCompletedList(data.completedInvestigations);
+      renderAchievements(user.achievements);
+
+    } catch (err) {
+      toast.error('Failed to load dashboard: ' + err.message);
+    }
+  }
+
+  function renderActiveList(invs) {
+    const el = document.getElementById('active-list');
+    if (!invs.length) {
+      el.innerHTML = emptyState('🔍', 'No Active Cases', 'Begin a new investigation from the case library.', '<a href="/pages/cases.html" class="btn btn-primary">Browse Cases</a>');
+      return;
+    }
+    el.innerHTML = invs.map(inv => `
+      <div class="inv-card card">
+        <div class="inv-card-header">
+          <span class="badge badge-info">🔍 In Progress</span>
+          <span class="text-muted text-xs">${timeAgo(inv.updatedAt)}</span>
+        </div>
+        <h3 class="inv-case-id">${inv.caseId}</h3>
+        <div class="inv-stats">
+          <span class="text-muted text-sm">🔎 ${inv.discoveredClues?.length || 0} clues</span>
+          <span class="text-muted text-sm">📓 ${inv.notes?.length || 0} notes</span>
+        </div>
+        <a href="/pages/workspace.html?inv=${inv._id}&caseId=${inv.caseId}" class="btn btn-primary btn-sm mt-4">
+          Continue Investigation →
+        </a>
+      </div>
+    `).join('');
+  }
+
+  function renderCompletedList(invs) {
+    const el = document.getElementById('completed-list');
+    if (!invs.length) {
+      el.innerHTML = emptyState('✓', 'No Completed Cases', 'Solve your first mystery to see it here.', '<a href="/pages/cases.html" class="btn btn-outline">Start Investigating</a>');
+      return;
+    }
+    el.innerHTML = invs.map(inv => `
+      <div class="inv-card card">
+        <div class="inv-card-header">
+          <span class="badge ${inv.accusation?.isCorrect ? 'badge-success' : 'badge-danger'}">
+            ${inv.accusation?.isCorrect ? '✓ Solved' : '✕ Unsolved'}
+          </span>
+          <span class="text-muted text-xs">${timeAgo(inv.completedAt)}</span>
+        </div>
+        <h3 class="inv-case-id">${inv.caseId}</h3>
+        <div class="inv-stats">
+          <span class="text-amber">+${inv.xpEarned || 0} XP</span>
+          <span class="text-muted text-sm">Score: ${inv.score || 0}</span>
+          <span class="text-muted text-sm">${inv.discoveredClues?.length || 0} clues</span>
+        </div>
+        <a href="/pages/workspace.html?inv=${inv._id}&caseId=${inv.caseId}" class="btn btn-ghost btn-sm mt-4">
+          Review Case →
+        </a>
+      </div>
+    `).join('');
+  }
+
+  const ALL_ACHIEVEMENTS = [
+    { id: 'first_case', name: 'First Case Closed', description: 'Complete your first investigation.', icon: '🔍' },
+    { id: 'sharp_eye', name: 'Sharp Eye', description: 'Discover all clues in a case.', icon: '👁️' },
+    { id: 'no_hints', name: 'Mind Like a Razor', description: 'Solve a case without hints.', icon: '🧠' },
+    { id: 'speed_solver', name: 'Speed Solver', description: 'Complete a case in under 20 minutes.', icon: '⚡' },
+    { id: 'perfect_timeline', name: 'Chronologist', description: 'Submit a perfect timeline.', icon: '🕐' },
+    { id: 'five_cases', name: 'Veteran Investigator', description: 'Complete five investigations.', icon: '🏅' },
+    { id: 'perfect_score', name: 'Flawless Deduction', description: 'Achieve a perfect score.', icon: '💎' },
+  ];
+
+  function renderAchievements(earned) {
+    const earnedIds = (earned || []).map(a => a.id);
+    const el = document.getElementById('achievements-grid');
+    el.innerHTML = ALL_ACHIEVEMENTS.map(a => {
+      const unlocked = earnedIds.includes(a.id);
+      return `
+        <div class="achievement-card ${unlocked ? 'unlocked' : 'locked'}">
+          <div class="achievement-icon">${a.icon}</div>
+          <div class="achievement-name">${a.name}</div>
+          <div class="achievement-desc">${a.description}</div>
+          ${unlocked ? '<div class="badge badge-success mt-2">Unlocked</div>' : '<div class="badge badge-muted mt-2">Locked</div>'}
+        </div>
+      `;
+    }).join('');
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>

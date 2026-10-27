@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Case Library — MindMaze</title>
+  <meta name="description" content="Browse and select mystery cases to investigate in MindMaze."/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <link rel="stylesheet" href="/css/cases.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="navbar-brand"><span>🔍</span> MindMaze</a>
+  <button class="nav-toggle" id="nav-toggle">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <ul class="navbar-nav" id="navbar-nav">
+    <li><a href="/pages/cases.html" class="active">Case Library</a></li>
+    <li><a href="/pages/dashboard.html">Dashboard</a></li>
+    <li><a href="/pages/leaderboard.html">Leaderboard</a></li>
+  </ul>
+  <div class="navbar-actions">
+    <span class="text-secondary text-sm nav-username"></span>
+    <a href="/pages/dashboard.html" class="btn btn-ghost btn-sm">Dashboard</a>
+    <button class="btn btn-outline btn-sm" id="logout-btn">Logout</button>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="container">
+    <!-- Page header -->
+    <div class="page-header">
+      <div>
+        <h1>Case Library</h1>
+        <p class="text-secondary">Select a mystery and open the investigation.</p>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="cases-filters">
+      <div class="search-wrapper">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="search-input" class="form-input search-input" placeholder="Search cases…"/>
+      </div>
+      <div class="filter-chips">
+        <button class="filter-chip active" data-filter="all">All</button>
+        <button class="filter-chip" data-filter="Easy">Easy</button>
+        <button class="filter-chip" data-filter="Medium">Medium</button>
+        <button class="filter-chip" data-filter="Hard">Hard</button>
+        <button class="filter-chip" data-filter="Expert">Expert</button>
+      </div>
+      <div class="filter-chips">
+        <button class="filter-chip" data-category="all">All Categories</button>
+        <button class="filter-chip" data-category="Theft">Theft</button>
+        <button class="filter-chip" data-category="Murder">Murder</button>
+      </div>
+    </div>
+
+    <!-- Cases grid -->
+    <div id="cases-grid" class="cases-grid">
+      <div class="loading-state">
+        <div class="spinner spinner-lg"></div>
+        <p class="text-muted mt-4">Loading cases…</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast-container"></div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/ui.js"></script>
+<script>
+  if (!auth.requireAuth()) { /* redirected */ }
+
+  document.getElementById('nav-toggle').addEventListener('click', () => {
+    document.getElementById('navbar-nav').classList.toggle('open');
+  });
+  document.getElementById('logout-btn').addEventListener('click', () => auth.logout());
+
+  let allCases = [];
+  let myInvestigations = [];
+  let activeFilter = 'all';
+  let activeCategory = 'all';
+  let searchQuery = '';
+
+  async function load() {
+    try {
+      const [casesData, myInvData] = await Promise.all([
+        api.getCases(),
+        api.getMyInvestigations(),
+      ]);
+      allCases = casesData.cases;
+      myInvestigations = myInvData.investigations;
+      renderCases();
+    } catch (e) {
+      document.getElementById('cases-grid').innerHTML =
+        `<div class="alert alert-error">${e.message || 'Failed to load cases.'}</div>`;
+    }
+  }
+
+  function getInvestigationForCase(caseId) {
+    return myInvestigations.find(i => i.caseId === caseId) || null;
+  }
+
+  function renderCases() {
+    const filtered = allCases.filter(c => {
+      const matchDiff = activeFilter === 'all' || c.difficulty === activeFilter;
+      const matchCat = activeCategory === 'all' || c.category === activeCategory;
+      const matchSearch = !searchQuery || c.title.toLowerCase().includes(searchQuery.toLowerCase()) || c.description.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchDiff && matchCat && matchSearch;
+    });
+
+    const grid = document.getElementById('cases-grid');
+    if (!filtered.length) {
+      grid.innerHTML = emptyState('🔍', 'No Cases Found', 'Try adjusting your filters.', '');
+      return;
+    }
+
+    grid.innerHTML = filtered.map(c => {
+      const inv = getInvestigationForCase(c.caseId);
+      const status = inv ? inv.status : null;
+      return renderCaseCard(c, status, inv);
+    }).join('');
+  }
+
+  function renderCaseCard(c, status, inv) {
+    const statusBadge = status === 'completed'
+      ? `<span class="badge badge-success">✓ Completed</span>`
+      : status === 'active'
+      ? `<span class="badge badge-info">🔍 In Progress</span>`
+      : `<span class="badge badge-muted">Not Started</span>`;
+
+    const btnText = status === 'completed' ? 'View Results' : status === 'active' ? 'Continue Investigation' : 'Begin Investigation';
+    const btnClass = status === 'completed' ? 'btn-ghost' : 'btn-primary';
+
+    const clueCount = c.clues ? c.clues.length : '?';
+    const suspectCount = c.suspects ? c.suspects.length : '?';
+
+    return `
+      <article class="case-card card" data-case-id="${c.caseId}">
+        <div class="case-card-top">
+          <div class="case-badges">
+            ${difficultyBadge(c.difficulty)}
+            ${statusBadge}
+          </div>
+          <span class="text-muted text-xs">⏱ ${c.estimatedTime}</span>
+        </div>
+
+        <div class="case-card-icon">${c.category === 'Murder' ? '☠️' : '🎻'}</div>
+        <h2 class="case-card-title">${c.title}</h2>
+        <p class="case-card-subtitle text-amber italic text-sm">${c.subtitle || ''}</p>
+        <p class="case-card-desc text-secondary">${c.description}</p>
+
+        <div class="case-meta">
+          <span class="case-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            ${clueCount} Clues
+          </span>
+          <span class="case-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            ${suspectCount} Suspects
+          </span>
+          <span class="case-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            ${c.category}
+          </span>
+        </div>
+
+        ${inv && status === 'active' ? `
+          <div class="case-progress">
+            <div class="flex justify-between text-xs text-muted mb-2">
+              <span>Clues discovered</span>
+              <span>${inv.discoveredClues?.length || 0} / ${c.clues?.length || '?'}</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width:${c.clues?.length ? Math.round((inv.discoveredClues?.length || 0) / c.clues.length * 100) : 0}%"></div>
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="case-card-footer">
+          <div class="case-tags">
+            ${(c.tags || []).slice(0,3).map(t => `<span class="badge badge-muted">${t}</span>`).join('')}
+          </div>
+          <button class="btn ${btnClass} btn-sm" data-case-id="${c.caseId}" data-inv-id="${inv?._id || ''}" data-status="${status || ''}">
+            ${btnText}
+          </button>
+        </div>
+      </article>
+    `;
+  }
+
+  // Click to investigate
+  document.getElementById('cases-grid').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-case-id]');
+    if (!btn) return;
+
+    const caseId = btn.dataset.caseId;
+    const invId = btn.dataset.invId;
+    const status = btn.dataset.status;
+
+    if (status === 'completed' && invId) {
+      window.location.href = `/pages/workspace.html?inv=${invId}&caseId=${caseId}`;
+      return;
+    }
+
+    if (status === 'active' && invId) {
+      window.location.href = `/pages/workspace.html?inv=${invId}&caseId=${caseId}`;
+      return;
+    }
+
+    // Create new investigation
+    setLoading(btn, true);
+    try {
+      const data = await api.createInvestigation(caseId);
+      toast.success('Investigation opened!');
+      window.location.href = `/pages/workspace.html?inv=${data.investigation._id}&caseId=${caseId}`;
+    } catch (err) {
+      toast.error(err.message || 'Failed to start investigation.');
+      setLoading(btn, false);
+    }
+  });
+
+  // Filters
+  document.querySelectorAll('.filter-chip[data-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip[data-filter]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      renderCases();
+    });
+  });
+
+  document.querySelectorAll('.filter-chip[data-category]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip[data-category]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = btn.dataset.category;
+      renderCases();
+    });
+  });
+
+  document.getElementById('search-input').addEventListener('input', (e) => {
+    searchQuery = e.target.value;
+    renderCases();
+  });
+
+  load();
+</script>
+</body>
+</html>

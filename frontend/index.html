@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindMaze — Interactive Detective Investigation Platform</title>
+  <meta name="description" content="Solve gripping fictional mysteries in MindMaze. Investigate crime scenes, examine suspects, connect evidence, and unravel the truth." />
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/landing.css" />
+  <style>
+    /* Inline critical styles for initial paint */
+    body { background: #0d0f14; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="main-navbar">
+  <a href="/" class="navbar-brand">
+    <span class="magnifier">🔍</span> MindMaze
+  </a>
+
+  <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+
+  <ul class="navbar-nav" id="navbar-nav">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#cases">Cases</a></li>
+    <li><a href="#how-to-play">How to Play</a></li>
+    <li class="nav-auth hidden"><a href="/pages/cases.html">Case Library</a></li>
+    <li class="nav-auth hidden"><a href="/pages/dashboard.html">Dashboard</a></li>
+    <li class="nav-auth hidden"><a href="/pages/leaderboard.html">Leaderboard</a></li>
+  </ul>
+
+  <div class="navbar-actions">
+    <div class="nav-guest">
+      <a href="/pages/auth.html" class="btn btn-outline btn-sm">Sign In</a>
+    </div>
+    <div class="nav-auth hidden flex items-center gap-3">
+      <span class="text-secondary text-sm nav-username"></span>
+      <a href="/pages/dashboard.html" class="btn btn-primary btn-sm">Dashboard</a>
+      <button class="btn btn-ghost btn-sm" id="logout-btn">Logout</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg"></div>
+  <div class="container hero-content">
+    <div class="hero-eyebrow">
+      <span class="badge badge-amber">🕵️ New Mysteries Available</span>
+    </div>
+    <h1 class="hero-title">
+      The Truth Is<br>
+      <em class="text-amber">Hidden in Plain Sight</em>
+    </h1>
+    <p class="hero-subtitle">
+      Step into MindMaze — an immersive detective experience where you investigate crime scenes,
+      interrogate suspects, connect evidence, and close the case before the trail goes cold.
+    </p>
+    <div class="hero-actions">
+      <a href="/pages/cases.html" class="btn btn-primary btn-lg" id="start-investigating-btn">
+        Start Investigating
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </a>
+      <a href="#how-to-play" class="btn btn-ghost btn-lg">How It Works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><strong class="text-amber">2+</strong><span>Active Cases</span></div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat"><strong class="text-amber">∞</strong><span>Deductions to Make</span></div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat"><strong class="text-amber">100%</strong><span>Fictional Mysteries</span></div>
+    </div>
+  </div>
+  <div class="hero-scroll-indicator">
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- FEATURED CASES -->
+<section id="cases" class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Open Cases</h2>
+      <p class="text-secondary">Two complete mysteries awaiting a sharp detective.</p>
+    </div>
+    <div class="featured-cases" id="featured-cases">
+      <!-- Populated by JS -->
+      <div class="card featured-case-skeleton">
+        <div class="skeleton-line" style="width:60%;height:1.5rem;margin-bottom:1rem"></div>
+        <div class="skeleton-line" style="width:100%;height:0.875rem;margin-bottom:0.5rem"></div>
+        <div class="skeleton-line" style="width:85%;height:0.875rem"></div>
+      </div>
+      <div class="card featured-case-skeleton">
+        <div class="skeleton-line" style="width:55%;height:1.5rem;margin-bottom:1rem"></div>
+        <div class="skeleton-line" style="width:100%;height:0.875rem;margin-bottom:0.5rem"></div>
+        <div class="skeleton-line" style="width:80%;height:0.875rem"></div>
+      </div>
+    </div>
+    <div class="text-center mt-8">
+      <a href="/pages/cases.html" class="btn btn-outline">View All Cases</a>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <h2>Your Investigation Toolkit</h2>
+      <p class="text-secondary">Every tool a detective needs, in a single interface.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>Crime Scene Investigation</h3>
+        <p>Click through detailed crime scenes to discover hidden clues. Every object tells a story.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👤</div>
+        <h3>Suspect Profiles</h3>
+        <p>Study detailed backgrounds, motives, and alibis. Cross-reference statements with evidence.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗂️</div>
+        <h3>Evidence Board</h3>
+        <p>Drag clue cards onto a board, draw connections between evidence, and build your theory.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📅</div>
+        <h3>Crime Timeline</h3>
+        <p>Arrange events chronologically. A correct timeline unlocks score bonuses.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📓</div>
+        <h3>Detective Notebook</h3>
+        <p>Take notes, form hypotheses, and record deductions that persist across sessions.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚖️</div>
+        <h3>Final Accusation</h3>
+        <p>Name your suspect, justify your reasoning, and see if the evidence holds up in court.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW TO PLAY -->
+<section id="how-to-play" class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>How to Investigate</h2>
+      <p class="text-secondary">Follow the method. Solve the mystery.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">01</div>
+        <div class="step-content">
+          <h3>Choose a Case</h3>
+          <p>Browse the case library and select a mystery that matches your skill level.</p>
+        </div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-number">02</div>
+        <div class="step-content">
+          <h3>Gather Evidence</h3>
+          <p>Explore the crime scene, discover clues, and examine suspect profiles.</p>
+        </div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-number">03</div>
+        <div class="step-content">
+          <h3>Connect the Dots</h3>
+          <p>Use the evidence board to link clues, reconstruct the timeline, and take notes.</p>
+        </div>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-number">04</div>
+        <div class="step-content">
+          <h3>Make Your Accusation</h3>
+          <p>Name the culprit, present your reasoning, and see if your deduction holds.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section cta-section">
+  <div class="container text-center">
+    <h2>Ready to Open a Case File?</h2>
+    <p class="text-secondary" style="max-width:500px;margin:var(--space-4) auto var(--space-8)">
+      Create your detective profile and begin your first investigation today.
+    </p>
+    <a href="/pages/auth.html" class="btn btn-primary btn-lg nav-guest">
+      Create Account &amp; Investigate
+    </a>
+    <a href="/pages/cases.html" class="btn btn-outline btn-lg nav-auth hidden">
+      Browse Cases
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-brand">
+      <span class="magnifier">🔍</span> MindMaze
+    </div>
+    <p class="text-muted text-sm">A fictional detective investigation platform. All cases, suspects, and events are entirely fictional.</p>
+    <div class="footer-links">
+      <a href="/pages/cases.html">Cases</a>
+      <a href="/pages/leaderboard.html">Leaderboard</a>
+      <a href="/pages/dashboard.html">Dashboard</a>
+    </div>
+    <p class="text-muted text-xs" style="margin-top:var(--space-4)">© 2024 MindMaze. All rights reserved.</p>
+  </div>
+</footer>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/ui.js"></script>
+<script>
+  // Mobile nav toggle
+  document.getElementById('nav-toggle').addEventListener('click', () => {
+    document.getElementById('navbar-nav').classList.toggle('open');
+  });
+
+  // Logout
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) logoutBtn.addEventListener('click', () => auth.logout());
+
+  // Redirect "Start Investigating" to auth if not logged in
+  document.getElementById('start-investigating-btn').addEventListener('click', (e) => {
+    if (!auth.isLoggedIn()) {
+      e.preventDefault();
+      window.location.href = '/pages/auth.html';
+    }
+  });
+
+  // Load featured cases
+  async function loadFeaturedCases() {
+    const container = document.getElementById('featured-cases');
+    try {
+      // Show public preview even when not logged in (use hardcoded preview for landing)
+      const cases = [
+        {
+          caseId: 'case-001',
+          title: 'The Vanishing Violin',
+          subtitle: 'A Heist at Ashworth Manor',
+          description: 'A priceless Stradivarius violin has vanished from a locked manor the night before its auction. One of the dinner guests is the thief.',
+          difficulty: 'Medium',
+          estimatedTime: '35-50 min',
+          category: 'Theft',
+          tags: ['1920s', 'England', 'Manor'],
+        },
+        {
+          caseId: 'case-002',
+          title: 'The Hemlock Club',
+          subtitle: 'A Poisoning at the Gentlemen\'s Society',
+          description: 'Financier Edmund Roth is found dead at his private table in an exclusive New York club. Poisoned. Four members were present.',
+          difficulty: 'Hard',
+          estimatedTime: '50-70 min',
+          category: 'Murder',
+          tags: ['1940s', 'New York', 'Noir'],
+        },
+      ];
+      renderFeaturedCases(cases, container);
+    } catch (e) {
+      container.innerHTML = '<p class="text-muted">Unable to load cases. Start an investigation to explore.</p>';
+    }
+  }
+
+  function renderFeaturedCases(cases, container) {
+    container.innerHTML = cases.map(c => `
+      <div class="featured-case-card card">
+        <div class="featured-case-header">
+          <div>
+            <span class="badge badge-muted">${c.category}</span>
+            ${difficultyBadge(c.difficulty)}
+          </div>
+          <span class="text-muted text-xs">⏱ ${c.estimatedTime}</span>
+        </div>
+        <h3 class="featured-case-title">${c.title}</h3>
+        <p class="featured-case-subtitle text-amber italic text-sm">${c.subtitle}</p>
+        <p class="featured-case-desc text-secondary">${c.description}</p>
+        <div class="featured-case-tags">
+          ${c.tags.map(t => `<span class="badge badge-muted">${t}</span>`).join('')}
+        </div>
+        <div class="featured-case-footer">
+          <a href="/pages/cases.html" class="btn btn-outline btn-sm">
+            Open Case File →
+          </a>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Scroll animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('in-view');
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.feature-card, .step, .featured-case-card').forEach(el => {
+    observer.observe(el);
+  });
+
+  loadFeaturedCases();
+</script>
+</body>
+</html>

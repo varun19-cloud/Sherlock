@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Investigation Workspace — MindMaze</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <link rel="stylesheet" href="/css/workspace.css"/>
+</head>
+<body>
+
+<!-- Workspace navbar -->
+<nav class="workspace-nav">
+  <a href="/pages/cases.html" class="workspace-back">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+    </svg>
+    Case Library
+  </a>
+  <div class="workspace-case-title" id="workspace-case-title">Loading…</div>
+  <div class="workspace-nav-actions">
+    <span id="workspace-status-badge" class="badge badge-info">Active</span>
+    <span class="text-muted text-xs" id="workspace-timer">00:00</span>
+  </div>
+</nav>
+
+<!-- Tab navigation -->
+<div class="workspace-tabs-bar">
+  <button class="workspace-tab active" data-tab="scene">
+    <span>🔍</span> Crime Scene
+  </button>
+  <button class="workspace-tab" data-tab="suspects">
+    <span>👤</span> Suspects
+  </button>
+  <button class="workspace-tab" data-tab="evidence">
+    <span>🗂️</span> Evidence
+    <span class="tab-badge" id="evidence-count">0</span>
+  </button>
+  <button class="workspace-tab" data-tab="board">
+    <span>📌</span> Board
+  </button>
+  <button class="workspace-tab" data-tab="timeline">
+    <span>📅</span> Timeline
+  </button>
+  <button class="workspace-tab" data-tab="notebook">
+    <span>📓</span> Notebook
+  </button>
+  <button class="workspace-tab" data-tab="hints">
+    <span>💡</span> Hints
+  </button>
+  <button class="workspace-tab tab-accuse" data-tab="accusation">
+    <span>⚖️</span> Accuse
+  </button>
+</div>
+
+<main class="workspace-main">
+
+  <!-- ── CRIME SCENE ── -->
+  <section class="ws-panel" id="panel-scene">
+    <div class="panel-header">
+      <h2>Crime Scene</h2>
+      <span class="text-muted text-sm" id="scene-subtitle">Examine the scene carefully.</span>
+    </div>
+    <div class="scene-layout">
+      <div class="scene-image-wrapper">
+        <div class="scene-image" id="scene-image">
+          <div class="scene-placeholder" id="scene-placeholder">
+            <div class="scene-placeholder-art" id="scene-art">
+              <!-- Rendered via JS based on case -->
+            </div>
+          </div>
+          <!-- Clue hotspots -->
+          <div id="scene-hotspots"></div>
+        </div>
+        <p class="text-muted text-xs text-center mt-3">Click highlighted areas to discover clues.</p>
+      </div>
+      <div class="scene-sidebar">
+        <div class="scene-desc card" id="scene-desc-card">
+          <h3>Scene Description</h3>
+          <p id="scene-description" class="text-secondary"></p>
+        </div>
+        <div class="card mt-4">
+          <h3>Discovered Clues</h3>
+          <div id="scene-discovered-list" class="clue-mini-list">
+            <p class="text-muted text-sm">No clues discovered yet.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SUSPECTS ── -->
+  <section class="ws-panel hidden" id="panel-suspects">
+    <div class="panel-header">
+      <h2>Suspects</h2>
+      <span class="text-muted text-sm">Examine profiles and alibis.</span>
+    </div>
+    <div class="suspects-grid" id="suspects-grid">
+      <div class="loading-state"><div class="spinner spinner-lg"></div></div>
+    </div>
+  </section>
+
+  <!-- ── EVIDENCE ── -->
+  <section class="ws-panel hidden" id="panel-evidence">
+    <div class="panel-header">
+      <h2>Evidence Collection</h2>
+      <span class="text-muted text-sm" id="evidence-summary">Inspect all collected clues.</span>
+    </div>
+    <div id="evidence-grid" class="evidence-grid">
+      <div class="text-center text-muted" style="padding:var(--space-12)">
+        <p>🔍 No evidence collected yet. Explore the crime scene.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── EVIDENCE BOARD ── -->
+  <section class="ws-panel hidden" id="panel-board">
+    <div class="panel-header">
+      <h2>Evidence Board</h2>
+      <div class="board-controls">
+        <span class="text-muted text-xs">Drag cards · Click two to connect</span>
+        <button class="btn btn-ghost btn-sm" id="clear-selection-btn">Clear Selection</button>
+      </div>
+    </div>
+    <div class="board-container" id="evidence-board">
+      <!-- Clue cards rendered here -->
+    </div>
+    <!-- SVG overlay for connections -->
+    <svg class="board-connections" id="board-connections" style="position:absolute;inset:0;pointer-events:none;"></svg>
+  </section>
+
+  <!-- ── TIMELINE ── -->
+  <section class="ws-panel hidden" id="panel-timeline">
+    <div class="panel-header">
+      <h2>Crime Timeline</h2>
+      <span class="text-muted text-sm">Arrange events in chronological order.</span>
+    </div>
+    <div class="timeline-layout">
+      <div class="timeline-instructions card">
+        <p class="text-secondary text-sm">Drag the events below into the correct chronological order, then submit.</p>
+        <div id="timeline-result" class="hidden alert mt-4"></div>
+      </div>
+      <div class="timeline-events" id="timeline-events">
+        <!-- Populated by JS -->
+      </div>
+      <div class="timeline-actions">
+        <button class="btn btn-primary" id="submit-timeline-btn">Submit Timeline</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── NOTEBOOK ── -->
+  <section class="ws-panel hidden" id="panel-notebook">
+    <div class="panel-header">
+      <h2>Detective Notebook</h2>
+      <button class="btn btn-primary btn-sm" id="add-note-btn">+ New Note</button>
+    </div>
+    <div class="notebook-layout">
+      <div id="notes-grid" class="notes-grid">
+        <div class="text-center text-muted" style="padding:var(--space-12)">
+          <p>📓 No notes yet. Click "New Note" to begin.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── HINTS ── -->
+  <section class="ws-panel hidden" id="panel-hints">
+    <div class="panel-header">
+      <h2>Progressive Hints</h2>
+      <span class="text-muted text-sm">Each hint deducts XP from your final score.</span>
+    </div>
+    <div class="hints-container" id="hints-container">
+      <!-- Populated by JS -->
+    </div>
+  </section>
+
+  <!-- ── ACCUSATION ── -->
+  <section class="ws-panel hidden" id="panel-accusation">
+    <div class="panel-header">
+      <h2>Final Accusation</h2>
+      <span class="text-muted text-sm">Name the culprit and present your case.</span>
+    </div>
+    <div class="accusation-layout">
+      <div id="accusation-result" class="hidden"></div>
+      <div id="accusation-form-wrapper">
+        <div class="accusation-suspects" id="accusation-suspects">
+          <!-- Suspect selection -->
+        </div>
+        <div class="form-group mt-6">
+          <label class="form-label" for="accusation-reasoning">Your Reasoning</label>
+          <textarea id="accusation-reasoning" class="form-input" rows="5" placeholder="Explain how the evidence supports your conclusion…"></textarea>
+        </div>
+        <div class="mt-6 flex items-center gap-4">
+          <button class="btn btn-primary" id="submit-accusation-btn">Submit Accusation</button>
+          <span class="text-muted text-sm">⚠ This action is final.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Clue Discovery Modal (auto-opens on click) -->
+<div id="clue-modal" class="modal-overlay hidden">
+  <div class="modal clue-modal-inner">
+    <div class="modal-header">
+      <h3 id="clue-modal-title">Clue Discovered!</h3>
+      <button class="btn btn-icon btn-ghost" id="close-clue-modal">✕</button>
+    </div>
+    <div class="clue-modal-body">
+      <div class="clue-type-badge" id="clue-modal-type-badge"></div>
+      <p id="clue-modal-description" class="mt-4 text-secondary"></p>
+      <div class="clue-modal-location mt-4">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span id="clue-modal-location" class="text-sm text-muted"></span>
+      </div>
+      <div class="clue-modal-xp" id="clue-modal-xp"></div>
+    </div>
+    <div class="mt-6">
+      <button class="btn btn-primary w-full" id="close-clue-modal-2">Got it</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/ui.js"></script>
+<script src="/js/workspace.js"></script>
+</body>
+</html>

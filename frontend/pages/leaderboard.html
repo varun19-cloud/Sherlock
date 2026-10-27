@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Leaderboard — MindMaze</title>
+  <meta name="description" content="MindMaze detective leaderboard — top investigators ranked by XP and cases solved."/>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <link rel="stylesheet" href="/css/leaderboard.css"/>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/" class="navbar-brand"><span>🔍</span> MindMaze</a>
+  <button class="nav-toggle" id="nav-toggle">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <ul class="navbar-nav" id="navbar-nav">
+    <li><a href="/pages/cases.html">Case Library</a></li>
+    <li><a href="/pages/dashboard.html">Dashboard</a></li>
+    <li><a href="/pages/leaderboard.html" class="active">Leaderboard</a></li>
+  </ul>
+  <div class="navbar-actions">
+    <span class="text-secondary text-sm nav-username"></span>
+    <button class="btn btn-outline btn-sm" id="logout-btn">Logout</button>
+  </div>
+</nav>
+
+<main class="page">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <h1>Hall of Detectives</h1>
+        <p class="text-secondary">Top investigators ranked by XP and cases solved.</p>
+      </div>
+    </div>
+
+    <!-- Top 3 podium -->
+    <div id="podium" class="podium hidden">
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- Full table -->
+    <div class="leaderboard-card card">
+      <div class="leaderboard-header">
+        <span>#</span>
+        <span>Detective</span>
+        <span>Rank</span>
+        <span>Cases</span>
+        <span>XP</span>
+        <span>Score</span>
+      </div>
+      <div id="leaderboard-body">
+        <div class="loading-state"><div class="spinner spinner-lg"></div></div>
+      </div>
+    </div>
+
+    <div class="leaderboard-footer">
+      <button class="btn btn-ghost btn-sm" id="load-more-btn" style="display:none">Load More</button>
+    </div>
+  </div>
+</main>
+
+<div class="toast-container"></div>
+
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/ui.js"></script>
+<script>
+  if (!auth.requireAuth()) { /* redirected */ }
+
+  document.getElementById('nav-toggle').addEventListener('click', () => {
+    document.getElementById('navbar-nav').classList.toggle('open');
+  });
+  document.getElementById('logout-btn').addEventListener('click', () => auth.logout());
+
+  const currentUser = auth.getUser();
+  if (currentUser) {
+    document.querySelectorAll('.nav-username').forEach(el => el.textContent = currentUser.username);
+  }
+
+  let currentPage = 1;
+  let totalEntries = 0;
+
+  async function loadLeaderboard(page = 1) {
+    try {
+      const data = await api.getLeaderboard({ limit: 20, page });
+      totalEntries = data.total;
+
+      if (page === 1) {
+        renderPodium(data.leaderboard.slice(0, 3));
+        renderTable(data.leaderboard, true);
+      } else {
+        renderTable(data.leaderboard, false);
+      }
+
+      const loadMore = document.getElementById('load-more-btn');
+      if (page * 20 < totalEntries) {
+        loadMore.style.display = '';
+        currentPage = page;
+      } else {
+        loadMore.style.display = 'none';
+      }
+    } catch (err) {
+      document.getElementById('leaderboard-body').innerHTML =
+        `<div class="leaderboard-empty">⚠ ${err.message || 'Failed to load leaderboard.'}</div>`;
+    }
+  }
+
+  function renderPodium(top3) {
+    if (top3.length < 2) return;
+    const podium = document.getElementById('podium');
+    const medals = ['🥇', '🥈', '🥉'];
+    const order = top3.length >= 3 ? [1, 0, 2] : [0, 1];
+
+    podium.innerHTML = order.map(i => {
+      const p = top3[i];
+      if (!p) return '';
+      const isMe = currentUser && p.username === currentUser.username;
+      return `
+        <div class="podium-entry podium-${i + 1} ${isMe ? 'podium-me' : ''}">
+          <div class="podium-medal">${medals[i]}</div>
+          <div class="podium-avatar">🕵️</div>
+          <div class="podium-name">${p.username}${isMe ? ' (You)' : ''}</div>
+          <div class="podium-rank">${p.detectiveRank}</div>
+          <div class="podium-xp">${p.xp.toLocaleString()} XP</div>
+        </div>
+      `;
+    }).join('');
+
+    podium.classList.remove('hidden');
+  }
+
+  function renderTable(rows, replace) {
+    const body = document.getElementById('leaderboard-body');
+    const html = rows.map(row => {
+      const isMe = currentUser && row.username === currentUser.username;
+      const rankIcons = ['🥇', '🥈', '🥉'];
+      return `
+        <div class="leaderboard-row ${isMe ? 'leaderboard-row-me' : ''}">
+          <span class="lb-rank">${rankIcons[row.rank - 1] || row.rank}</span>
+          <span class="lb-detective">
+            <span class="lb-avatar">🕵️</span>
+            <span class="lb-name">${row.username}${isMe ? ' ← You' : ''}</span>
+          </span>
+          <span class="lb-cell"><span class="badge badge-amber">${row.detectiveRank}</span></span>
+          <span class="lb-cell">${row.casesCompleted}</span>
+          <span class="lb-cell lb-xp">${row.xp.toLocaleString()}</span>
+          <span class="lb-cell">${row.totalScore.toLocaleString()}</span>
+        </div>
+      `;
+    }).join('');
+
+    if (replace) {
+      if (!rows.length) {
+        body.innerHTML = emptyState('🔍', 'No Detectives Yet', 'Be the first to solve a case!', '<a href="/pages/cases.html" class="btn btn-primary">Start Investigating</a>');
+      } else {
+        body.innerHTML = html;
+      }
+    } else {
+      body.insertAdjacentHTML('beforeend', html);
+    }
+  }
+
+  document.getElementById('load-more-btn').addEventListener('click', () => {
+    loadLeaderboard(currentPage + 1);
+  });
+
+  loadLeaderboard();
+</script>
+</body>
+</html>
